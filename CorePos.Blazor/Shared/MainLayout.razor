@@ -1,0 +1,21 @@
+﻿@inherits LayoutComponentBase
+
+<div class="sidebar">
+    <NavMenu @ref="navMenu" />
+</div>
+
+<div class="main">
+    <div class="top-row px-4">
+        <a href="#" class="ml-md-auto" @onclick="LogOut">Contacto</a>
+    </div>
+    <div class="content px-4">
+        @Body
+    </div>
+</div>
+
+@code {
+    NavMenu navMenu;
+    public async void LogOut()
+    {
+    }
+}

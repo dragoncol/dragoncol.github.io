@@ -1,0 +1,139 @@
+﻿@page "/references"
+@inject ReferencesBL referencesBL
+@inject AppState appState
+
+<h1>Referencias</h1>
+
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="formModel" >
+            <DataAnnotationsValidator />
+            <ValidationSummary />            
+            <div class="form-group">
+                <label for="text">Busqueda</label>
+                <InputText Id="text" Class="form-control" @bind-Value="formModel.text"  />
+                <ValidationMessage For="@(() => formModel.text)" />
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@if (references == null)
+{
+    <CustomLoading />
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Codigo</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Costo</th>
+                <th>Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var reference in references)
+            {
+            <tr>
+                <td>
+                    <a href="/reference-audit/@reference.referenceId">Historial</a>
+                </td>
+                <td>@reference.code</td>
+                <td>@reference.name</td>
+                <td>@reference.prize</td>
+                <td>@reference.cost</td>
+                <td>@reference.stock</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CorePOSApi.Model.ReferenceMd> originalList = null;
+
+    private List<CorePOSApi.Model.ReferenceMd> references = null;
+
+    public SearchEntity formModel = new SearchEntity();
+
+    bool showAll;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (appState.references == null)
+        {
+            originalList = (await referencesBL.GetReference(new CorePOSApi.Model.contract.GetReferenceRequest()))?.referenceList;
+            appState.references = originalList;
+        }
+        else
+        {
+            originalList = appState.references;
+        }
+
+        references = originalList;
+
+        formModel.OnChange -= TextChanged;
+        formModel.OnChange += TextChanged;
+    }
+
+    public async void TextChanged()
+    {
+        await Task.Run(() =>
+        {
+            applyFilter();
+        });
+    }
+
+    public void applyFilter()
+    {
+        if (formModel.text.Length <= 3)
+        {
+            references = originalList;
+        }
+        else 
+        {
+            List<CorePOSApi.Model.ReferenceMd> temp = new List<CorePOSApi.Model.ReferenceMd>();
+            foreach( var item in originalList )
+            {
+                if( item.name.ToLower().Contains( formModel.text.ToLower() )
+                    || item.code == formModel.text
+                    )
+                {
+                    temp.Add(item);
+                }
+            }
+            references = temp;
+        }
+        StateHasChanged();
+    }
+
+    public class SearchEntity
+    {
+        public SearchEntity()
+        {
+            _text = string.Empty;
+        }
+
+        public event Action OnChange;
+
+        private string _text;
+
+        public string text
+        {
+            get
+            {
+                return _text;
+            }
+            set
+            {
+                _text = value;
+                OnChange?.Invoke();
+            }
+        }
+    }
+
+}

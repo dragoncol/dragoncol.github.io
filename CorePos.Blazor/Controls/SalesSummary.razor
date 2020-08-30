@@ -1,0 +1,63 @@
+﻿@inject ReportBL reportBL
+@inject AppState appState
+
+@if (reportHandler != null)
+{
+    <h5>Resumen</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Forma de Pago</th>
+                <th>Ordenes</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < reportHandler.Count; i++)
+            {
+                {
+                    row = reportHandler.GetRow(i);
+                }
+                <tr>
+                    <td>@row["paymentTypeName"]</td>
+                    <td>@row["rcount"]</td>
+                    <td>@row["rvalue"].string2Dbl().ToNStr()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    Services.ReportHandler reportHandler = null;
+    IDictionary<string, string> row = null;
+
+    public DateTime initialDate { get; set; }
+
+    public DateTime finalDate { get; set; }
+
+    public async Task BuilReport()
+    {
+        CorePOSApi.Model.report.ReportRequest request = new CorePOSApi.Model.report.ReportRequest();
+        request.name = "payment_type_summary";
+        request.parameters = new List<CorePOSApi.Model.report.ReportParameterMd>();
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "wareHouseId", value = appState.wareHouseId.ToString() });
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "initialDate", value = initialDate.ToString("yyyy-MM-dd") });
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "finalDate", value = finalDate.ToString("yyyy-MM-dd") });
+
+        CorePOSApi.Model.report.ReportResponse response = await reportBL.Query(request);
+
+        if (response.rows != null)
+        {
+            reportHandler = new ReportHandler(response);
+        }
+        StateHasChanged();
+    }
+
+    public void Clean()
+    {
+        reportHandler = null;
+        StateHasChanged();
+    }
+}

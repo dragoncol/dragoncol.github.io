@@ -1,0 +1,87 @@
+﻿@inject UserBL userBL
+@inject AppState appState
+@implements IDisposable
+
+<div class="top-row pl-4 navbar navbar-dark">
+    <a class="navbar-brand" href="">Reportes POS</a>
+    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+    <ul class="nav flex-column">
+        <li class="nav-item px-3">
+            <NavLink class="nav-link">
+                <span aria-hidden="true"></span> @userName
+            </NavLink>
+        </li>
+        @if (LoggedIn)
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="home">
+                    <span class="oi oi-home" aria-hidden="true"></span> Hoy
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="sales">
+                    <span class="oi oi-calendar" aria-hidden="true"></span> Buscar Movimientos
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="dailys">
+                    <span class="oi oi-grid-three-up" aria-hidden="true"></span> Resumen Diario
+                </NavLink>
+            </li>
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="references">
+                    <span class="oi oi-list" aria-hidden="true"></span> Lista de Productos
+                </NavLink>
+            </li>
+        }
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="#" @onclick="LogOut">
+                <span class="oi oi-account-logout" aria-hidden="true"></span> Salir
+            </NavLink>
+        </li>
+    </ul>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    public string userName { get; set; }
+
+    public bool LoggedIn { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        CallBackEvent();
+        appState.OnChange += CallBackEvent;
+    }
+
+    public void Dispose()
+    {
+        appState.OnChange -= CallBackEvent;
+    }
+
+    private async void CallBackEvent()
+    {
+        LoggedIn = appState.LoggedIn;
+        userName = (await userBL.GetSession()).userName;
+        StateHasChanged();
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    public async void LogOut()
+    {
+        await userBL.LogOut();        
+    }
+
+}

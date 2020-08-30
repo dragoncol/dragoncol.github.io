@@ -1,0 +1,35 @@
+﻿@page "/home"
+@inject ReportBL reportBL
+
+@if (IsLoading == true)
+{
+    <CustomLoading />
+}
+
+<SalesSummary @ref="salesSummary" />
+
+@code {
+
+    private SalesSummary salesSummary;
+    bool IsLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (salesSummary != null)
+            {
+                salesSummary.initialDate = DateTime.Now.Date;
+                salesSummary.finalDate = DateTime.Now.Date.AddDays(1);
+                await salesSummary.BuilReport();
+                IsLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+}

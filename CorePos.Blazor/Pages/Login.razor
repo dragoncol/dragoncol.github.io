@@ -1,0 +1,64 @@
+﻿@page "/login"
+@inject NavigationManager navigationManager
+@inject UserBL userBL
+@inject AppState appState
+
+@if (Error != "")
+{
+    <div class="alert alert-danger" role="alert">
+        <p>@Error</p>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Acceso de Usuarios</h5>
+        <EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label for="user">Usuario</label>
+                <InputText Id="user" Class="form-control" @bind-Value="loginModel.user" />
+                <ValidationMessage For="@(() => loginModel.user)" />
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText Id="password" type="password" Class="form-control" @bind-Value="loginModel.password" />
+                <ValidationMessage For="@(() => loginModel.password)" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                @if (IsLoading == true)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                }
+                Ingresar
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private CorePOSApi.Model.contract.LoginRequest loginModel = new CorePOSApi.Model.contract.LoginRequest();
+    private string Error = "";
+    private bool IsLoading = false;
+
+    private async Task HandleLogin()
+    {
+        IsLoading = true;
+        CorePOSApi.Model.contract.LoginResponse response = await userBL.Login(loginModel);
+        if (response.code == 100)
+        {
+            Error = "";
+            appState.LoggedIn = true;
+            appState.loginResponse = response;
+            navigationManager.NavigateTo("/home");
+        }
+        else
+        {
+            appState.LoggedIn = false;
+            Error = response.message;
+        }
+        IsLoading = false;
+    }
+}

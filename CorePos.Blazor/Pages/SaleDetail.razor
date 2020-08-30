@@ -1,0 +1,122 @@
+﻿@page "/sale-detail/{saleId:int}"
+@inject SalesBL salesBL
+@inject AppState appState
+
+@if (sale != null)
+{
+    <h5> Resumen </h5>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th colspan="2">
+                            @Services.GlobalBusiness.GetOrderType(sale)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Fecha</td>
+                        <td>@sale.date</td>
+                    </tr>
+                    <tr>
+                        <td>Numero</td>
+                        <td>@sale.number</td>
+                    </tr>
+                    <tr>
+                        <td>Usuario</td>
+                        <td>@sale.userName</td>
+                    </tr>
+                    <tr>
+                        <td>Forma de Pago</td>
+                        <td>@sale.paymentTypeName</td>
+                    </tr>
+                    <tr>
+                        <td>Descuento</td>
+                        <td>@sale.discountPercent</td>
+                    </tr>
+                    <tr>
+                        <td>Total</td>
+                        <td>@sale.total.applyDiscount(sale.discountPercent).ToNStr()</td>
+                    </tr>
+                    <tr>
+                        <td>Cliente</td>
+                        <td>@sale.customer?.name</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    if (sale.saleDetails != null)
+    {
+        <h5> Detalles </h5>
+        <div class="card">
+            <div class="card-body">
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Codigo</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in sale.saleDetails)
+                        {
+                            <tr>
+                                <td>@item.reference.code</td>
+                                <td>@item.reference.name</td>
+                                <td>@item.unitPrize.ToNStr()</td>
+                                <td>@item.quantity</td>
+                                <td>@((item.unitPrize*item.quantity).ToNStr())</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    }
+}
+
+@if (sale == null || sale?.saleDetails == null)
+{
+    <CustomLoading />
+}
+
+
+@code {
+
+    [Parameter]
+    public int saleId { get; set; }
+
+    public CorePOSApi.Model.SaleMd sale;
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<CorePOSApi.Model.SaleMd> sales = appState.sales;
+        if (sales != null)
+        {
+            sale = sales.Where(x => x.saleId == saleId).FirstOrDefault();
+        }
+        if (sale == null)
+        {
+            CorePOSApi.Model.contract.GetSaleRequest rqSale = new CorePOSApi.Model.contract.GetSaleRequest();
+            rqSale.saleId = saleId;
+            var rpSale = await salesBL.GetSale(rqSale);
+            sale = rpSale.sale;
+        }
+        if (sale != null && sale.saleDetails == null)
+        {
+            var request = new CorePOSApi.Model.contract.GetSaleDetailRequest();
+            request.saleId = saleId;
+            var response = await salesBL.GetSaleDetail(request);
+            sale.saleDetails = response.saleDetails;
+        }
+    }
+}

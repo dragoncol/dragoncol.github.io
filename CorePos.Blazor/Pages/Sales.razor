@@ -1,0 +1,143 @@
+﻿@page "/sales"
+@inject SalesBL salesBL
+@inject AppState appState
+
+<h5>Buscar Ventas</h5>
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="formModel" OnValidSubmit="HandleForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="form-group">
+                <label for="initialDate">Fecha Inicial</label>
+                <InputDate Id="initialDate" Class="form-control" @bind-Value="formModel.initialDate" />
+                <ValidationMessage For="@(() => formModel.initialDate)" />
+            </div>
+            <div class="form-group">
+                <label for="finalDate">Fecha Final</label>
+                <InputDate Id="finalDate" Class="form-control" @bind-Value="formModel.finalDate" />
+                <ValidationMessage For="@(() => formModel.finalDate)" />
+            </div>
+            <div class="form-group">
+                <label for="transactionTypeId">Tipo de Operacion</label>
+                <CustomInputSelect Id="transactionTypeId" Class="form-control" @bind-Value="formModel.transactionTypeId">
+                    <option value="0">Todos</option>
+                    <option value="2">Venta</option>
+                    <option value="3">Devolucion</option>
+                    <option value="1">Ingreso Inventario</option>
+                    <option value="12">Entrada Traslado</option>
+                    <option value="13">Salida Traslado</option>
+                </CustomInputSelect>
+            </div>
+            <div class="form-group">
+                <label for="number">Numero</label>
+                <InputText Id="number" Class="form-control" @bind-Value="formModel.number" />
+                <ValidationMessage For="@(() => formModel.number)" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                @if (IsLoading == true)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                }
+                Buscar
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <SalesSummary @ref="salesSummary" />
+    </div>
+</div>
+
+@if (sales != null)
+{
+    <div class="card">
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Numero</th>
+                        <th>Fecha</th>
+                        <th>Pago</th>
+                        <th>Unidades</th>
+                        <th>Descuento (%)</th>
+                        <th>Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sale in sales)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/sale-detail/@sale.saleId">@sale.number</a>
+                            </td>
+                            <td>@sale.date</td>
+                            <td>@sale.paymentTypeName</td>
+                            <td>@sale.unitCount</td>
+                            <td>@sale.discountPercent</td>
+                            <td>@sale.total.applyDiscount(sale.discountPercent).ToNStr()</td>
+                            @{
+                                string voidString = (sale.voidSale != null ? "Anulado" : "");
+                            }
+                            <td>@voidString</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+
+@code {
+    private CorePOSApi.Model.contract.FindSalesRequest formModel = new CorePOSApi.Model.contract.FindSalesRequest();
+    private List<CorePOSApi.Model.SaleMd> sales = null;
+
+    private bool IsLoading = false;
+    private SalesSummary salesSummary;
+
+    protected override async Task OnInitializedAsync()
+    {
+        formModel.initialDate = DateTime.Now.Date;
+        formModel.finalDate = DateTime.Now.Date;
+        formModel.transactionTypeId = 0;
+    }
+
+    private async Task HandleForm()
+    {
+        IsLoading = true;
+
+        var request = new CorePOSApi.Model.contract.FindSalesRequest();
+        request.initialDate = formModel.initialDate.Date;
+        request.finalDate = formModel.finalDate.Date.AddDays(1);
+        request.transactionTypeId = formModel.transactionTypeId;
+        request.number = formModel.number;
+        request.top = 1000;
+        CorePOSApi.Model.contract.FindSalesResponse response = await salesBL.FindSales(request);
+
+        sales = response.sales;
+        appState.sales = response.sales;
+
+        if (formModel.transactionTypeId == 0 || formModel.transactionTypeId == 2)
+        {
+            if (salesSummary != null)
+            {
+                salesSummary.initialDate = formModel.initialDate.Date;
+                salesSummary.finalDate = formModel.finalDate.Date.AddDays(1);
+                await salesSummary.BuilReport();
+            }
+        }
+        else
+        {
+            if (salesSummary != null)
+            {
+                salesSummary.Clean();
+            }
+        }
+
+        IsLoading = false;
+    }
+}

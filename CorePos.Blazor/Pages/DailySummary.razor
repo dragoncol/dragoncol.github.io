@@ -1,0 +1,96 @@
+﻿@page "/dailys"
+@inject ReportBL reportBL
+@inject AppState appState
+
+<h5>Resumen Diario</h5>
+<div class="card">
+    <div class="card-body">
+        <EditForm Model="formModel" OnValidSubmit="HandleForm">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="form-group">
+                <label for="initialDate">Fecha Inicial</label>
+                <InputDate Id="initialDate" Class="form-control" @bind-Value="formModel.initialDate" />
+                <ValidationMessage For="@(() => formModel.initialDate)" />
+            </div>
+            <div class="form-group">
+                <label for="finalDate">Fecha Final</label>
+                <InputDate Id="finalDate" Class="form-control" @bind-Value="formModel.finalDate" />
+                <ValidationMessage For="@(() => formModel.finalDate)" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                @if (IsLoading == true)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                }
+                Buscar
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@if (reportHandler != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Forma de Pago</th>
+                <th>Ordenes</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < reportHandler.Count; i++)
+            {
+                {
+                    row = reportHandler.GetRow(i);
+                }
+                <tr>
+                    <td>@row["rdate"]</td>
+                    <td>@row["paymentTypeName"]</td>
+                    <td>@row["rcount"]</td>
+                    <td>@row["rvalue"].string2Dbl().ToNStr()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    private CorePOSApi.Model.contract.FindSalesRequest formModel = new CorePOSApi.Model.contract.FindSalesRequest();
+
+    Services.ReportHandler reportHandler = null;
+    IDictionary<string, string> row = null;
+
+    private bool IsLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        formModel.initialDate = DateTime.Now.Date;
+        formModel.finalDate = DateTime.Now.Date;
+    }
+
+    private async Task HandleForm()
+    {
+        IsLoading = true;
+
+        CorePOSApi.Model.report.ReportRequest request = new CorePOSApi.Model.report.ReportRequest();
+        request.name = "daily_summary";
+        request.parameters = new List<CorePOSApi.Model.report.ReportParameterMd>();
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "wareHouseId", value = appState.wareHouseId.ToString() });
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "initialDate", value = formModel.initialDate.ToString("yyyy-MM-dd") });
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "finalDate", value = formModel.finalDate.AddDays(1).ToString("yyyy-MM-dd") });
+
+        CorePOSApi.Model.report.ReportResponse response = await reportBL.Query(request);
+
+        if (response.rows != null)
+        {
+            reportHandler = new ReportHandler(response);
+        }
+
+        IsLoading = false;
+    }
+}

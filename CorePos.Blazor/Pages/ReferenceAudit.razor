@@ -1,0 +1,90 @@
+﻿@page "/reference-audit/{referenceId:int}"
+@inject ReportBL reportBL
+@inject ReferencesBL referencesBL
+@inject AppState appState
+
+@if (reference != null)
+{
+    <h3>@reference.name</h3>
+    <h5 style="color:red">@("Saldo:" + reference.stock.ToString())</h5>
+}
+
+@if (reportHandler != null && reference != null )
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Numero de Transaccion</th>
+                <th>Tipo de Transaccion</th>
+                <th>Comentario</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Saldo Anterior</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                double saldo = reference.stock;
+            }
+            @for (int i = 0; i < reportHandler.Count; i++)
+            {
+                {
+                    row = reportHandler.GetRow(i);
+                    double din = row["mIn"].string2Dbl();
+                    double dout = row["mOut"].string2Dbl();
+                    saldo += (dout - din);
+                }
+            <tr>
+                <td>@row["mDate"]</td>
+                <td>
+                    <a href="/sale-detail/@row["saleId"]">@row["saleNumber"]</a>
+                </td>
+                <td>@row["movementType"]</td>
+                <td>@row["comment"]</td>
+                <td>@row["mIn"]</td>
+                <td>@row["mOut"]</td>
+                <td style="color:red" >@saldo</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <CustomLoading />
+}
+
+@code {
+
+    [Parameter]
+    public int referenceId { get; set; }
+
+    Services.ReportHandler reportHandler = null;
+    IDictionary<string, string> row = null;
+
+    CorePOSApi.Model.ReferenceMd reference = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<CorePOSApi.Model.ReferenceMd> references = appState.references;
+
+        if (references != null)
+        {
+            reference = references.Where(x => x.referenceId == referenceId).FirstOrDefault();
+        }
+
+        CorePOSApi.Model.report.ReportRequest request = new CorePOSApi.Model.report.ReportRequest();
+        request.name = "reference_audit";
+        request.parameters = new List<CorePOSApi.Model.report.ReportParameterMd>();
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "wareHouseId", value = appState.wareHouseId.ToString() });
+        request.parameters.Add(new CorePOSApi.Model.report.ReportParameterMd() { key = "referenceId", value = referenceId.ToString() });
+
+        CorePOSApi.Model.report.ReportResponse response = await reportBL.Query(request);
+
+        if (response.rows != null)
+        {
+            reportHandler = new ReportHandler(response);
+        }
+    }
+}
