@@ -1,6 +1,7 @@
 ﻿using CorePos.Blazor.Pages;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -44,6 +45,29 @@ namespace CorePos.Blazor.Services
                 else
                 {
                     return -1;
+                }
+            }
+        }
+
+        public string wareHouseName
+        {
+            get
+            {
+                try
+                {
+
+                    CorePOSApi.Model.WareHouseMd item = loginResponse?.wareHouseList?.Where(x => x.wareHouseId == wareHouseId).FirstOrDefault();
+                    if (item != null)
+                    {
+                        return item.name;
+                    }
+                    else
+                    {
+                        return string.Empty;
+                    }
+                }
+                catch {
+                    return string.Empty;
                 }
             }
         }

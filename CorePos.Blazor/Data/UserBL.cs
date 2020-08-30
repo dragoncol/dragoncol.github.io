@@ -40,23 +40,6 @@ namespace CorePos.Blazor.Data
             return response;
         }
 
-        public async Task<CorePOSApi.Model.contract.LoginResponse> GetSession()
-        {
-            CorePOSApi.Model.contract.LoginResponse response = null;
-            string userName = await localStorage.GetItemAsync<string>("userName");
-            if (!string.IsNullOrEmpty(userName))
-            {
-                response = new CorePOSApi.Model.contract.LoginResponse();
-                response.userName = userName;
-            }
-            else
-            {
-                response = new CorePOSApi.Model.contract.LoginResponse();
-                response.userName = "Invitado";
-            }
-            return response;
-        }
-
         public bool UserHasPermission( CorePOSApi.Model.contract.LoginResponse response, string permission )
         {
             var item = response.permissions.Where(x => x.name == permission).FirstOrDefault();
@@ -67,11 +50,11 @@ namespace CorePos.Blazor.Data
         {
             await localStorage.SetItemAsync("access_token", "");
             await localStorage.SetItemAsync("userName", "");
-            appState.LoggedIn = true;
-            appState.LoggedIn = false;
             appState.sales = null;
             appState.references = null;
             appState.loginResponse = null;
+            appState.LoggedIn = true;
+            appState.LoggedIn = false;
             navigationManager.NavigateTo("/login");
         }
     }

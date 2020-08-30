@@ -1,5 +1,5 @@
-﻿@inject UserBL userBL
-@inject AppState appState
+﻿@inject AppState appState
+@inject UserBL userBL
 @implements IDisposable
 
 <div class="top-row pl-4 navbar navbar-dark">
@@ -70,7 +70,19 @@
     private async void CallBackEvent()
     {
         LoggedIn = appState.LoggedIn;
-        userName = (await userBL.GetSession()).userName;
+
+        CorePOSApi.Model.contract.LoginResponse loginResponse = appState.loginResponse;
+
+        if( loginResponse != null )
+        {
+            userName = loginResponse.userName + ", " + appState.wareHouseName;
+        }
+        else
+        {
+            userName = "Invitado";
+        }
+
+
         StateHasChanged();
     }
 
@@ -81,7 +93,7 @@
 
     public async void LogOut()
     {
-        await userBL.LogOut();        
+        await userBL.LogOut();
     }
 
 }

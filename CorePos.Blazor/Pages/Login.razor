@@ -50,8 +50,8 @@
         if (response.code == 100)
         {
             Error = "";
-            appState.LoggedIn = true;
             appState.loginResponse = response;
+            appState.LoggedIn = true;
             navigationManager.NavigateTo("/home");
         }
         else
