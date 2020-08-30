@@ -18,7 +18,7 @@ namespace CorePos.Blazor.Services
         protected ILocalStorageService localStorage;
         protected NavigationManager navigationManager;
 
-        string serviceUrl = "https://ueji4glrel.execute-api.us-east-2.amazonaws.com/Prod/";
+        string serviceUrl = "https://i359uyxpsj.execute-api.us-east-2.amazonaws.com/Prod/";
 
         public RestClient(HttpClient httpClient, ILocalStorageService localStorage, NavigationManager navigationManager)
         {
