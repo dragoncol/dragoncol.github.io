@@ -65,6 +65,7 @@
                         <th>Descuento (%)</th>
                         <th>Total</th>
                         <th></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,11 +79,9 @@
                             <td>@sale.paymentTypeName</td>
                             <td>@sale.unitCount</td>
                             <td>@sale.discountPercent</td>
-                            <td>@sale.total.applyDiscount(sale.discountPercent).ToNStr()</td>
-                            @{
-                                string voidString = (sale.voidSale != null ? "Anulado" : "");
-                            }
-                            <td>@voidString</td>
+                            <td>@sale.total.applyDiscount(sale.discountPercent).ToNStr()</td>                         
+                            <td>@(sale.customer != null ? sale.customer.name : "")</td>                            
+                            <td style="color:red">@(sale.voidSale != null ? "Anulado" : "")</td>
                         </tr>
                     }
                 </tbody>
