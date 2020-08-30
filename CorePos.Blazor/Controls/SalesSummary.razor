@@ -7,6 +7,7 @@
     <table class="table">
         <thead>
             <tr>
+                <th>Tipo</th>
                 <th>Forma de Pago</th>
                 <th>Ordenes</th>
                 <th>Total</th>
@@ -18,11 +19,12 @@
                 {
                     row = reportHandler.GetRow(i);
                 }
-                <tr>
-                    <td>@row["paymentTypeName"]</td>
-                    <td>@row["rcount"]</td>
-                    <td>@row["rvalue"].string2Dbl().ToNStr()</td>
-                </tr>
+            <tr>
+                <td>@row["saleType"]</td>
+                <td>@row["paymentTypeName"]</td>
+                <td>@row["rcount"]</td>
+                <td>@row["rvalue"].string2Dbl().ToNStr()</td>
+            </tr>
             }
         </tbody>
     </table>

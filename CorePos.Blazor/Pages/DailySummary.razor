@@ -2,7 +2,7 @@
 @inject ReportBL reportBL
 @inject AppState appState
 
-<h5>Resumen Diario</h5>
+<h5>Resumen por Fechas</h5>
 <div class="card">
     <div class="card-body">
         <EditForm Model="formModel" OnValidSubmit="HandleForm">
@@ -35,6 +35,7 @@
         <thead>
             <tr>
                 <th>Fecha</th>
+                <th>Tipo</th>
                 <th>Forma de Pago</th>
                 <th>Ordenes</th>
                 <th>Total</th>
@@ -46,12 +47,13 @@
                 {
                     row = reportHandler.GetRow(i);
                 }
-                <tr>
-                    <td>@row["rdate"]</td>
-                    <td>@row["paymentTypeName"]</td>
-                    <td>@row["rcount"]</td>
-                    <td>@row["rvalue"].string2Dbl().ToNStr()</td>
-                </tr>
+            <tr>
+                <td>@row["rdate"]</td>
+                <td>@row["saleType"]</td>
+                <td>@row["paymentTypeName"]</td>
+                <td>@row["rcount"]</td>
+                <td>@row["rvalue"].string2Dbl().ToNStr()</td>
+            </tr>
             }
         </tbody>
     </table>
